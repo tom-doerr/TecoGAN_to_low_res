@@ -38,8 +38,8 @@ python3 runGan.py 1 \
 def get_rand_tensor(shape):
     rand_tensor_not_rounded = np.random.rand(*shape)
     rand_tensor_rounded = np.around(rand_tensor_not_rounded)
-    rand_tensor_uint8 = np.array(rand_tensor_rounded, dtype=np.uint8)
-    return rand_tensor_uint8
+    #rand_tensor_uint8 = np.array(rand_tensor_rounded, dtype=np.uint8)
+    return rand_tensor_rounded
 
 def get_score():
     metrics_content = ''
@@ -58,22 +58,23 @@ def evaluate_lr_images():
     return get_score()
 
 def add_noise_to_image(image):
-     rand_tensor = get_rand_tensor(image.shape)
-     image_new = image + rand_tensor
-     return image_new
+    rand_tensor = get_rand_tensor(image.shape)
+    image_new_not_clipped = np.array(image, dtype=np.int16) + rand_tensor
+    image_new = np.array(np.clip(image_new_not_clipped, a_min=0, a_max=255), dtype=np.uint8)
+    return image_new
 
 def execute_inference():
     os.system(INFERENCE_COMMAND)
 
-def calculate_l2_distance_images(dir_name_source):
-    l2_distance = 0
+def calculate_l1_distance_images(dir_name_source):
+    l1_distance = 0
     for im_path_source in glob.glob(dir_name_source + '*.png'):
          image_original = imageio.imread(im_path_source)
          image_reconstructed_path = im_path_source.replace(dir_name_source, OUTPUT_PATH_DIR+'output_')
          image_reconstructed = imageio.imread(image_reconstructed_path)
-         l2_distance += np.sum(image_reconstructed - image_original)
+         l1_distance += np.sum(image_reconstructed - image_original)
 
-    return l2_distance
+    return l1_distance
 
 
 def add_noise_to_images(dir_name_source, dir_name_target):
@@ -95,7 +96,7 @@ if __name__ == '__main__':
     shutil.copytree(dir_best, dir_target)
     #initial_score = evaluate_lr_images()
     execute_inference()
-    initial_score = calculate_l2_distance_images(ORIGINAL_IMAGES_PATH)
+    initial_score = calculate_l1_distance_images(ORIGINAL_IMAGES_PATH)
     best_score = initial_score
 
     while True:
@@ -104,7 +105,7 @@ if __name__ == '__main__':
         add_noise_to_images(DIR_NAME_BEST, DIR_NAME_TARGET)
         #score = evaluate_lr_images()
         execute_inference()
-        score = calculate_l2_distance_images(ORIGINAL_IMAGES_PATH)
+        score = calculate_l1_distance_images(ORIGINAL_IMAGES_PATH)
         if score < best_score:
             best_score = score
             shutil.rmtree(dir_second_best)
