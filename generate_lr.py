@@ -13,6 +13,7 @@ DIR_NAME_SECOND_BEST = 'calendar_best2'
 METRICS_FILE_PATH = 'results/metric_log/metrics.csv'
 ORIGINAL_IMAGES_PATH = 'HR/calendar/'
 OUTPUT_PATH_DIR = 'results/calendar/'
+NUM_CHANNELS_CALENDAR_SCENE_OVERALL = 576 * 720 * 3 * 41
 EVALUATE_UPSAMPLING_COMMAND = '''
 docker run \
 --gpus all -it \
@@ -34,6 +35,7 @@ python3 runGan.py 1 \
  > /dev/null 2>&1
 "
 '''                            
+
 
 def get_rand_tensor(shape):
     rand_tensor_not_rounded = np.random.rand(*shape)
@@ -72,7 +74,8 @@ def calculate_l1_distance_images(dir_name_source):
          image_original = imageio.imread(im_path_source)
          image_reconstructed_path = im_path_source.replace(dir_name_source, OUTPUT_PATH_DIR+'output_')
          image_reconstructed = imageio.imread(image_reconstructed_path)
-         l1_distance += np.sum(image_reconstructed - image_original)
+         l1_distance += np.sum(image_reconstructed - image_original) / \
+                 NUM_CHANNELS_CALENDAR_SCENE_OVERALL
 
     return l1_distance
 
