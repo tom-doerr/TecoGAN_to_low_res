@@ -16,6 +16,7 @@ OUTPUT_PATH_DIR = 'results/calendar/'
 NUM_CHANNELS_CALENDAR_SCENE_OVERALL = 576 * 720 * 3 * 41
 EVALUATE_UPSAMPLING_COMMAND = '''
 docker run \
+--rm \
 --gpus all -it \
 --mount src=$(pwd),target=/TecoGAN,type=bind \
 -w /TecoGAN tecogan_image \
@@ -27,6 +28,7 @@ python3 runGan.py 2 \
 
 INFERENCE_COMMAND = '''
 docker run \
+--rm \
 --gpus all -it \
 --mount src=$(pwd),target=/TecoGAN,type=bind \
 -w /TecoGAN tecogan_image \
@@ -38,7 +40,7 @@ python3 runGan.py 1 \
 
 
 def get_rand_tensor(shape):
-    rand_tensor_not_rounded = np.random.rand(*shape)
+    rand_tensor_not_rounded = (np.random.rand(*shape) * 2) - 1
     rand_tensor_rounded = np.around(rand_tensor_not_rounded)
     #rand_tensor_uint8 = np.array(rand_tensor_rounded, dtype=np.uint8)
     return rand_tensor_rounded
